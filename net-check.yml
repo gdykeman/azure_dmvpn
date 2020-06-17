@@ -1,0 +1,46 @@
+---
+- hosts: rtr1.hub
+  connection: local
+  gather_facts: false
+
+  tasks:
+    - name: show ospf neighbors
+      ios_command:
+        commands: 'show ip ospf neighbor'
+      register: ospf
+
+    - name: show ip route
+      ios_command:
+        commands: 'show ip route ospf'
+      register: routes
+
+    - name: show dmvpn neighbors
+      ios_command:
+        commands: 'show dmvpn'
+      register: dmvpn
+
+    - name: ping site
+      net_ping:
+        dest: "{{new_site | default('10.0.253.254')}}"
+      register: ping
+
+
+    - name: DMVPN information
+      debug:
+        msg: "{{dmvpn.stdout_lines[0][9:]}}"
+
+    - name: OSPF information
+      debug:
+        msg: "{{ospf.stdout_lines}}"
+
+    - name: Route information
+      debug:
+        msg: "{{routes}}"
+
+    - name: Ping information
+      debug:
+        msg:
+          - 'Pinging new site IP of: {{new_site}}'
+          - 'Packets transmitted: {{ping.packets_tx}}'
+          - 'Packets received: {{ping.packets_rx}}'
+          - 'Packet loss: {{ping.packet_loss}}'
